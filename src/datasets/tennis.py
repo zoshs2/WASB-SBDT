@@ -173,7 +173,15 @@ class Tennis(object):
         disps              = []
         for match in matches:
             match_clip_dir = osp.join(self._root_dir, match)
-            clip_names     = os.listdir(match_clip_dir)
+            clip_names     = [
+                name for name in os.listdir(match_clip_dir)
+                if osp.isdir(osp.join(match_clip_dir, name))
+            ]
+            if len(clip_names) == 0:
+                raise FileNotFoundError(
+                    f"No clip subfolders found under '{match_clip_dir}'. "
+                    "Expected <root_dir>/<match>/<clip>/(frames + Label.csv)."
+                )
             clip_names.sort()
             clip_names = clip_names[:int(len(clip_names)*num_clip_ratio)]
             num_rallies += len(clip_names)
