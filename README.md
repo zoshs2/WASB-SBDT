@@ -31,10 +31,10 @@ Once the detector supports CPU execution, you can run evaluation without NVIDIA 
 
 ```bash
 # Use the dedicated CPU config
-python3 main.py --config-name=eval_cpu dataset=tennis dataloader.num_workers=2
+python3 main.py --config-name=eval_cpu dataset=tennis
 
 # Or override the runner settings on the default eval config
-python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[] dataloader.num_workers=2
+python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[]
 ```
 
 ## Citation
