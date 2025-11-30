@@ -31,13 +31,11 @@ Once the detector supports CPU execution, you can run evaluation without NVIDIA 
 
 ```bash
 # Use the dedicated CPU config
-python3 main.py --config-name=eval_cpu dataset=tennis dataloader.num_workers=2
+python3 main.py --config-name=eval_cpu dataset=tennis
 
 # Or override the runner settings on the default eval config
-python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[] dataloader.num_workers=2
+python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[]
 ```
-
-**Custom clips:** the tennis dataloader expects `<root>/<match>/<clip>/` folders that contain frames plus `Label.csv`. When using the provided preprocessing notebook, each MP4 becomes a single clip and the prepared frames are placed directly under `<root>/<match>/` with `Label.csv`; this flat layout is supported as well.
 
 ## Citation
 

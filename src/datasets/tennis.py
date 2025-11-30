@@ -173,29 +173,15 @@ class Tennis(object):
         disps              = []
         for match in matches:
             match_clip_dir = osp.join(self._root_dir, match)
-            clip_names = [
+            clip_names     = [
                 name for name in os.listdir(match_clip_dir)
                 if osp.isdir(osp.join(match_clip_dir, name))
             ]
-            standalone_clip = False
             if len(clip_names) == 0:
-                # Fallback: treat the match folder itself as a single clip if it already
-                # contains frames and a Label.csv (used by the preprocessing notebook
-                # when each mp4 becomes one clip).
-                csv_in_match = osp.join(match_clip_dir, self._csv_filename)
-                frame_candidates = [
-                    name for name in os.listdir(match_clip_dir)
-                    if name.endswith(self._ext)
-                ]
-                if osp.isfile(csv_in_match) and len(frame_candidates) > 0:
-                    clip_names = [match]
-                    standalone_clip = True
-                else:
-                    raise FileNotFoundError(
-                        f"No clip subfolders found under '{match_clip_dir}'. "
-                        "Expected <root_dir>/<match>/<clip>/(frames + Label.csv) "
-                        "or frames + Label.csv directly under <match> when using the preprocessing notebook."
-                    )
+                raise FileNotFoundError(
+                    f"No clip subfolders found under '{match_clip_dir}'. "
+                    "Expected <root_dir>/<match>/<clip>/(frames + Label.csv)."
+                )
             clip_names.sort()
             clip_names = clip_names[:int(len(clip_names)*num_clip_ratio)]
             num_rallies += len(clip_names)
