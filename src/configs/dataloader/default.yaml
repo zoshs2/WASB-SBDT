@@ -14,6 +14,8 @@ sampler:
         inference_video_batch_size: 8
         inference_video_shuffle_batch: False
         inference_video_drop_last: False
+# Global override that applies to all dataloaders when set
+num_workers: 8
 train_num_workers: 8
 test_num_workers: 8
 inference_video_num_workers: 8
