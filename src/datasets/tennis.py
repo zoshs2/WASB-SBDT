@@ -188,8 +188,8 @@ class Tennis(object):
             for clip_name in clip_names:
                 clip_seq_list    = []
                 clip_seq_gt_dict = {}
-                clip_frame_dir   = osp.join(self._root_dir, match, clip_name)
-                clip_csv_path    = osp.join(self._root_dir, match, clip_name, self._csv_filename )
+                clip_frame_dir   = match_clip_dir if standalone_clip else osp.join(self._root_dir, match, clip_name)
+                clip_csv_path    = osp.join(clip_frame_dir, self._csv_filename)
                 ball_xyvs = load_csv(clip_csv_path, self._visible_flags, frame_dir=clip_frame_dir)
                 frame_names = []
                 for frame_name in os.listdir(clip_frame_dir):
