@@ -67,7 +67,9 @@ class Tennis(object):
         self._train_clip_gts   = {}
         self._train_clip_disps = {}
         if self._load_train or self._load_train_clip:
-            train_outputs = self._gen_seq_list(self._train_matches, self._train_num_clip_ratio, self._train_refine_npz_path)
+            train_outputs = self._gen_seq_list(
+                self._train_matches, self._train_num_clip_ratio, self._train_refine_npz_path, split_name='train'
+            )
             self._train_all                = train_outputs['seq_list'] 
             self._train_num_frames         = train_outputs['num_frames']
             self._train_num_frames_with_gt = train_outputs['num_frames_with_gt']
@@ -85,7 +87,9 @@ class Tennis(object):
         self._test_clip_gts   = {}
         self._test_clip_disps = {}
         if self._load_test or self._load_test_clip:
-            test_outputs  = self._gen_seq_list(self._test_matches, self._test_num_clip_ratio, self._test_refine_npz_path)
+            test_outputs  = self._gen_seq_list(
+                self._test_matches, self._test_num_clip_ratio, self._test_refine_npz_path, split_name='test'
+            )
             self._test_all                 = test_outputs['seq_list']
             self._test_num_frames          = test_outputs['num_frames']
             self._test_num_frames_with_gt  = test_outputs['num_frames_with_gt']
@@ -104,8 +108,14 @@ class Tennis(object):
         log.info("-------------------------------------------------------------------------------------")
         log.info("subset          | # batch | # frame | # frame w/ gt | # rally | # match | disp[pixel]")
         log.info("-------------------------------------------------------------------------------------")
+        def _safe_mean_std(arr):
+            if len(arr) == 0:
+                return 0.0, 0.0
+            return float(np.mean(arr)), float(np.std(arr))
+
         if self._load_train:
-            log.info("train           | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._train_all), self._train_num_frames, self._train_num_frames_with_gt, self._train_num_rallies, self._train_num_matches, self._train_disp_mean, self._train_disp_std ) )
+            train_mean, train_std = _safe_mean_std(self._train_disp_all)
+            log.info("train           | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._train_all), self._train_num_frames, self._train_num_frames_with_gt, self._train_num_rallies, self._train_num_matches, train_mean, train_std ) )
         if self._load_train_clip:
             num_items_all          = 0
             num_frames_all         = 0
@@ -120,16 +130,19 @@ class Tennis(object):
                 num_frames_with_gt = num_frames
                 clip_name = '{}_{}'.format(key[0], key[1])
                 disps     = np.array( self._train_clip_disps[key] )
-                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, np.mean(disps), np.std(disps) ))
+                disp_mean, disp_std = _safe_mean_std(disps)
+                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, disp_mean, disp_std ))
             
                 num_items_all          += num_items
                 num_frames_all         += num_frames
                 num_frames_with_gt_all += num_frames_with_gt
                 disps_all.extend(disps)
                 num_clips_all += 1
-            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, np.mean(disps_all), np.std(disps_all) ))
+            disp_mean, disp_std = _safe_mean_std(disps_all)
+            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, disp_mean, disp_std ))
         if self._load_test:
-            log.info("test            | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._test_all), self._test_num_frames, self._test_num_frames_with_gt, self._test_num_rallies, self._test_num_matches, self._test_disp_mean, self._test_disp_std) )
+            test_mean, test_std = _safe_mean_std(self._test_disp_all)
+            log.info("test            | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._test_all), self._test_num_frames, self._test_num_frames_with_gt, self._test_num_rallies, self._test_num_matches, test_mean, test_std) )
         if self._load_test_clip:
             num_items_all          = 0
             num_frames_all         = 0
@@ -144,20 +157,23 @@ class Tennis(object):
                 num_frames_with_gt = num_frames
                 clip_name = '{}_{}'.format(key[0], key[1])
                 disps     = np.array( self._test_clip_disps[key] )
-                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, np.mean(disps), np.std(disps) ))
+                disp_mean, disp_std = _safe_mean_std(disps)
+                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, disp_mean, disp_std ))
             
                 num_items_all          += num_items
                 num_frames_all         += num_frames
                 num_frames_with_gt_all += num_frames_with_gt
                 disps_all.extend(disps)
                 num_clips_all += 1
-            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, np.mean(disps_all), np.std(disps_all) ))
+            disp_mean, disp_std = _safe_mean_std(disps_all)
+            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, disp_mean, disp_std ))
         log.info("-------------------------------------------------------------------------------------")
 
-    def _gen_seq_list(self, 
-                      matches, 
-                      num_clip_ratio, 
+    def _gen_seq_list(self,
+                      matches,
+                      num_clip_ratio,
                       refine_npz_path=None,
+                      split_name='test',
     ):
         if refine_npz_path is not None:
             log.info('refine gt ball positions with {}'.format(refine_npz_path))
@@ -173,19 +189,57 @@ class Tennis(object):
         disps              = []
         for match in matches:
             match_clip_dir = osp.join(self._root_dir, match)
-            clip_names     = os.listdir(match_clip_dir)
+            if not osp.isdir(match_clip_dir):
+                available_matches = sorted(
+                    [
+                        name for name in os.listdir(self._root_dir)
+                        if osp.isdir(osp.join(self._root_dir, name))
+                    ]
+                )
+                raise FileNotFoundError(
+                    f"Match folder '{match_clip_dir}' does not exist. "
+                    f"Available matches under '{self._root_dir}': {available_matches}. "
+                    f"Set dataset.root_dir to the parent directory that contains your match folders "
+                    f"(e.g., game1, game2, ...) and list those matches in dataset.{split_name}.matches."
+                )
+            clip_names = [
+                name for name in os.listdir(match_clip_dir)
+                if osp.isdir(osp.join(match_clip_dir, name))
+            ]
+            standalone_clip = False
+            if len(clip_names) == 0:
+                # Fallback: treat the match folder itself as a single clip if it already
+                # contains frames and a Label.csv (used by the preprocessing notebook
+                # when each mp4 becomes one clip).
+                csv_in_match = osp.join(match_clip_dir, self._csv_filename)
+                frame_candidates = [
+                    name for name in os.listdir(match_clip_dir)
+                    if name.lower().endswith(self._ext.lower())
+                ]
+                if osp.isfile(csv_in_match) and len(frame_candidates) > 0:
+                    clip_names = [match]
+                    standalone_clip = True
+                else:
+                    entries = os.listdir(match_clip_dir)
+                    raise FileNotFoundError(
+                        f"No clip subfolders found under '{match_clip_dir}'. "
+                        "Expected <root_dir>/<match>/<clip>/(frames + Label.csv) "
+                        "or frames + Label.csv directly under <match> when using the preprocessing notebook. "
+                        f"Detected entries={entries}. Ensure frames use extension '{self._ext}' (case-insensitive) "
+                        "or override dataset.ext to match your extracted frames."
+                    )
             clip_names.sort()
             clip_names = clip_names[:int(len(clip_names)*num_clip_ratio)]
             num_rallies += len(clip_names)
             for clip_name in clip_names:
                 clip_seq_list    = []
                 clip_seq_gt_dict = {}
-                clip_frame_dir   = osp.join(self._root_dir, match, clip_name)
-                clip_csv_path    = osp.join(self._root_dir, match, clip_name, self._csv_filename )
+                clip_frame_dir   = match_clip_dir if standalone_clip else osp.join(self._root_dir, match, clip_name)
+                clip_csv_path    = osp.join(clip_frame_dir, self._csv_filename)
                 ball_xyvs = load_csv(clip_csv_path, self._visible_flags, frame_dir=clip_frame_dir)
                 frame_names = []
                 for frame_name in os.listdir(clip_frame_dir):
-                    if frame_name.endswith(self._ext):
+                    if frame_name.lower().endswith(self._ext.lower()):
                         frame_names.append(frame_name)
                 frame_names.sort()
                 num_frames         += len(frame_names)
