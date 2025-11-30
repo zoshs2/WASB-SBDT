@@ -57,7 +57,7 @@ If you hit shared-memory errors in Docker (e.g., "Unexpected bus error" from wor
      game4/sample4/{...}
    ```
 
-3. Run the container and mount the prepared data (adjust the host path as needed):
+3.Run the container and mount the prepared data (adjust the host path as needed):
    ```bash
 docker run --rm -it \
     --shm-size=2g \
@@ -66,7 +66,7 @@ docker run --rm -it \
      wasb-sbdt /bin/bash
    ```
 
-4. Inside the container, run CPU inference with overlays for the four games:
+1. Inside the container, run CPU inference with overlays for the four games:
    ```bash
    cd /workspace/WASB-SBDT/src
    python3 main.py --config-name=eval_cpu \
@@ -93,5 +93,3 @@ If you find this work useful, please consider to cite our paper:
 	year={2023}
 }
 ```
-
-
