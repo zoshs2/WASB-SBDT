@@ -108,8 +108,14 @@ class Tennis(object):
         log.info("-------------------------------------------------------------------------------------")
         log.info("subset          | # batch | # frame | # frame w/ gt | # rally | # match | disp[pixel]")
         log.info("-------------------------------------------------------------------------------------")
+        def _safe_mean_std(arr):
+            if len(arr) == 0:
+                return 0.0, 0.0
+            return float(np.mean(arr)), float(np.std(arr))
+
         if self._load_train:
-            log.info("train           | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._train_all), self._train_num_frames, self._train_num_frames_with_gt, self._train_num_rallies, self._train_num_matches, self._train_disp_mean, self._train_disp_std ) )
+            train_mean, train_std = _safe_mean_std(self._train_disp_all)
+            log.info("train           | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._train_all), self._train_num_frames, self._train_num_frames_with_gt, self._train_num_rallies, self._train_num_matches, train_mean, train_std ) )
         if self._load_train_clip:
             num_items_all          = 0
             num_frames_all         = 0
@@ -124,16 +130,19 @@ class Tennis(object):
                 num_frames_with_gt = num_frames
                 clip_name = '{}_{}'.format(key[0], key[1])
                 disps     = np.array( self._train_clip_disps[key] )
-                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, np.mean(disps), np.std(disps) ))
+                disp_mean, disp_std = _safe_mean_std(disps)
+                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, disp_mean, disp_std ))
             
                 num_items_all          += num_items
                 num_frames_all         += num_frames
                 num_frames_with_gt_all += num_frames_with_gt
                 disps_all.extend(disps)
                 num_clips_all += 1
-            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, np.mean(disps_all), np.std(disps_all) ))
+            disp_mean, disp_std = _safe_mean_std(disps_all)
+            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, disp_mean, disp_std ))
         if self._load_test:
-            log.info("test            | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._test_all), self._test_num_frames, self._test_num_frames_with_gt, self._test_num_rallies, self._test_num_matches, self._test_disp_mean, self._test_disp_std) )
+            test_mean, test_std = _safe_mean_std(self._test_disp_all)
+            log.info("test            | {:7d} | {:7d} | {:13d} | {:7d} | {:7d} | {:2.1f}+/-{:2.1f}".format(len(self._test_all), self._test_num_frames, self._test_num_frames_with_gt, self._test_num_rallies, self._test_num_matches, test_mean, test_std) )
         if self._load_test_clip:
             num_items_all          = 0
             num_frames_all         = 0
@@ -148,14 +157,16 @@ class Tennis(object):
                 num_frames_with_gt = num_frames
                 clip_name = '{}_{}'.format(key[0], key[1])
                 disps     = np.array( self._test_clip_disps[key] )
-                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, np.mean(disps), np.std(disps) ))
+                disp_mean, disp_std = _safe_mean_std(disps)
+                log.info("{} | {:7d} | {:7d} | {:13d} |         |         | {:2.1f}+/-{:2.1f}".format(clip_name, num_items, num_frames, num_frames_with_gt, disp_mean, disp_std ))
             
                 num_items_all          += num_items
                 num_frames_all         += num_frames
                 num_frames_with_gt_all += num_frames_with_gt
                 disps_all.extend(disps)
                 num_clips_all += 1
-            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, np.mean(disps_all), np.std(disps_all) ))
+            disp_mean, disp_std = _safe_mean_std(disps_all)
+            log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, disp_mean, disp_std ))
         log.info("-------------------------------------------------------------------------------------")
 
     def _gen_seq_list(self,
