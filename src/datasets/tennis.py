@@ -67,7 +67,9 @@ class Tennis(object):
         self._train_clip_gts   = {}
         self._train_clip_disps = {}
         if self._load_train or self._load_train_clip:
-            train_outputs = self._gen_seq_list(self._train_matches, self._train_num_clip_ratio, self._train_refine_npz_path)
+            train_outputs = self._gen_seq_list(
+                self._train_matches, self._train_num_clip_ratio, self._train_refine_npz_path, split_name='train'
+            )
             self._train_all                = train_outputs['seq_list'] 
             self._train_num_frames         = train_outputs['num_frames']
             self._train_num_frames_with_gt = train_outputs['num_frames_with_gt']
@@ -85,7 +87,9 @@ class Tennis(object):
         self._test_clip_gts   = {}
         self._test_clip_disps = {}
         if self._load_test or self._load_test_clip:
-            test_outputs  = self._gen_seq_list(self._test_matches, self._test_num_clip_ratio, self._test_refine_npz_path)
+            test_outputs  = self._gen_seq_list(
+                self._test_matches, self._test_num_clip_ratio, self._test_refine_npz_path, split_name='test'
+            )
             self._test_all                 = test_outputs['seq_list']
             self._test_num_frames          = test_outputs['num_frames']
             self._test_num_frames_with_gt  = test_outputs['num_frames_with_gt']
@@ -154,10 +158,11 @@ class Tennis(object):
             log.info("all         | {:7d} | {:7d} | {:13d} | {:7d} |         | {:2.1f}+/-{:2.1f}".format(num_items_all, num_frames_all, num_frames_with_gt_all, num_clips_all, np.mean(disps_all), np.std(disps_all) ))
         log.info("-------------------------------------------------------------------------------------")
 
-    def _gen_seq_list(self, 
-                      matches, 
-                      num_clip_ratio, 
+    def _gen_seq_list(self,
+                      matches,
+                      num_clip_ratio,
                       refine_npz_path=None,
+                      split_name='test',
     ):
         if refine_npz_path is not None:
             log.info('refine gt ball positions with {}'.format(refine_npz_path))
@@ -173,6 +178,19 @@ class Tennis(object):
         disps              = []
         for match in matches:
             match_clip_dir = osp.join(self._root_dir, match)
+            if not osp.isdir(match_clip_dir):
+                available_matches = sorted(
+                    [
+                        name for name in os.listdir(self._root_dir)
+                        if osp.isdir(osp.join(self._root_dir, name))
+                    ]
+                )
+                raise FileNotFoundError(
+                    f"Match folder '{match_clip_dir}' does not exist. "
+                    f"Available matches under '{self._root_dir}': {available_matches}. "
+                    f"Set dataset.root_dir to the parent directory that contains your match folders "
+                    f"(e.g., game1, game2, ...) and list those matches in dataset.{split_name}.matches."
+                )
             clip_names = [
                 name for name in os.listdir(match_clip_dir)
                 if osp.isdir(osp.join(match_clip_dir, name))
