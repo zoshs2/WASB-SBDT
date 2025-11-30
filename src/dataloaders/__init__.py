@@ -53,11 +53,17 @@ def build_dataloader(
     dataloader_cfg = cfg['dataloader']
 
     def resolve_workers(key):
-        # Prefer the specific key; fall back to the global num_workers when provided
-        specific = dataloader_cfg.get(key)
-        if specific is not None:
-            return specific
-        return dataloader_cfg.get('num_workers', 0)
+        """Resolve worker count, honoring the global override when set.
+
+        A global ``dataloader.num_workers`` should apply to all loaders (train, test,
+        inference). When it is provided, use it and skip the per-loader defaults. If
+        it is absent, fall back to the specific key.
+        """
+
+        global_override = dataloader_cfg.get('num_workers')
+        if global_override is not None:
+            return global_override
+        return dataloader_cfg.get(key, 0)
 
     train_clip_datasets = {}
     test_clip_datasets  = {}

@@ -37,6 +37,8 @@ python3 main.py --config-name=eval_cpu dataset=tennis dataloader.num_workers=2
 python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[] dataloader.num_workers=2
 ```
 
+If you hit shared-memory errors in Docker (e.g., "Unexpected bus error" from workers), lower workers with `dataloader.num_workers=0` or start the container with a larger shared memory segment (see Docker quickstart below).
+
 **Custom clips:** the tennis dataloader expects `<root>/<match>/<clip>/` folders that contain frames plus `Label.csv`. When using the provided preprocessing notebook, each MP4 becomes a single clip and the prepared frames are placed directly under `<root>/<match>/` with `Label.csv`; this flat layout is supported as well.
 
 ## Docker + custom tennis inference quickstart (CPU)
@@ -57,7 +59,8 @@ python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=
 
 3. Run the container and mount the prepared data (adjust the host path as needed):
    ```bash
-   docker run --rm -it \
+docker run --rm -it \
+    --shm-size=2g \
      -v $(pwd):/workspace/WASB-SBDT \
      -v /absolute/path/to/myInput_prepared:/workspace/myInput_prepared \
      wasb-sbdt /bin/bash
@@ -68,13 +71,13 @@ python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=
    cd /workspace/WASB-SBDT/src
    python3 main.py --config-name=eval_cpu \
      dataset=tennis model=wasb \
-     dataset.root_dir=/workspace/myInput_prepared/myInput \
-     dataset.test.matches=[game1,game2,game3,game4] \
-     runner.device=cpu runner.gpus=[] \
-     runner.vis_result=true \
-     detector.model_path=../pretrained_weights/wasb_tennis_best.pth.tar \
-     dataloader.num_workers=2
-   ```
+    dataset.root_dir=/workspace/myInput_prepared/myInput \
+    dataset.test.matches=[game1,game2,game3,game4] \
+    runner.device=cpu runner.gpus=[] \
+    runner.vis_result=true \
+    detector.model_path=../pretrained_weights/wasb_tennis_best.pth.tar \
+    dataloader.num_workers=0
+  ```
    - Use `runner.vis_hm=true` or `runner.vis_traj=true` if you also want heatmap/trajectory overlays.
    - If your match folders are named differently, update `dataset.test.matches` to match the directory names under `dataset.root_dir`.
 
