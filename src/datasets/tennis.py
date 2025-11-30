@@ -173,19 +173,44 @@ class Tennis(object):
         disps              = []
         for match in matches:
             match_clip_dir = osp.join(self._root_dir, match)
-            clip_names     = os.listdir(match_clip_dir)
+            clip_names = [
+                name for name in os.listdir(match_clip_dir)
+                if osp.isdir(osp.join(match_clip_dir, name))
+            ]
+            standalone_clip = False
+            if len(clip_names) == 0:
+                # Fallback: treat the match folder itself as a single clip if it already
+                # contains frames and a Label.csv (used by the preprocessing notebook
+                # when each mp4 becomes one clip).
+                csv_in_match = osp.join(match_clip_dir, self._csv_filename)
+                frame_candidates = [
+                    name for name in os.listdir(match_clip_dir)
+                    if name.lower().endswith(self._ext.lower())
+                ]
+                if osp.isfile(csv_in_match) and len(frame_candidates) > 0:
+                    clip_names = [match]
+                    standalone_clip = True
+                else:
+                    entries = os.listdir(match_clip_dir)
+                    raise FileNotFoundError(
+                        f"No clip subfolders found under '{match_clip_dir}'. "
+                        "Expected <root_dir>/<match>/<clip>/(frames + Label.csv) "
+                        "or frames + Label.csv directly under <match> when using the preprocessing notebook. "
+                        f"Detected entries={entries}. Ensure frames use extension '{self._ext}' (case-insensitive) "
+                        "or override dataset.ext to match your extracted frames."
+                    )
             clip_names.sort()
             clip_names = clip_names[:int(len(clip_names)*num_clip_ratio)]
             num_rallies += len(clip_names)
             for clip_name in clip_names:
                 clip_seq_list    = []
                 clip_seq_gt_dict = {}
-                clip_frame_dir   = osp.join(self._root_dir, match, clip_name)
-                clip_csv_path    = osp.join(self._root_dir, match, clip_name, self._csv_filename )
+                clip_frame_dir   = match_clip_dir if standalone_clip else osp.join(self._root_dir, match, clip_name)
+                clip_csv_path    = osp.join(clip_frame_dir, self._csv_filename)
                 ball_xyvs = load_csv(clip_csv_path, self._visible_flags, frame_dir=clip_frame_dir)
                 frame_names = []
                 for frame_name in os.listdir(clip_frame_dir):
-                    if frame_name.endswith(self._ext):
+                    if frame_name.lower().endswith(self._ext.lower()):
                         frame_names.append(frame_name)
                 frame_names.sort()
                 num_frames         += len(frame_names)
