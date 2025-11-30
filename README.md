@@ -27,13 +27,17 @@ Tested with Python3.8, CUDA11.3 on Ubuntu 18.04 (4 V100 GPUs inside). We recomme
 
 ## Running evaluation on CPU
 
-Once the detector supports CPU execution, you can run evaluation without NVIDIA GPUs by overriding the Hydra runner settings. The following example evaluates the tennis dataset on CPU:
+Once the detector supports CPU execution, you can run evaluation without NVIDIA GPUs by selecting the CPU preset or overriding the runner settings. The following examples evaluate the tennis dataset on CPU:
 
 ```bash
-python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[]
+# Use the dedicated CPU config
+python3 main.py --config-name=eval_cpu dataset=tennis dataloader.num_workers=2
+
+# Or override the runner settings on the default eval config
+python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[] dataloader.num_workers=2
 ```
 
-You can also select the CPU-specific runner preset with `--config-name=eval runner=eval_cpu`.
+**Custom clips:** the tennis dataloader expects `<root>/<match>/<clip>/` folders that contain frames plus `Label.csv`. When using the provided preprocessing notebook, each MP4 becomes a single clip and the prepared frames are placed directly under `<root>/<match>/` with `Label.csv`; this flat layout is supported as well.
 
 ## Citation
 
