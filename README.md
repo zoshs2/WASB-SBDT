@@ -20,10 +20,20 @@ https://github.com/nttcom/WASB-SBDT/assets/63090948/8889ef53-62c7-4c97-9b33-8bf3
 
 ## Installation and Setup
 
-Tested with Python3.8, CUDA11.3 on Ubuntu 18.04 (4 V100 GPUs inside). We recommend to use the [Dockerfile](./Dockerfile) provided in this repo (with ```-it``` option when running the container). 
+Tested with Python3.8, CUDA11.3 on Ubuntu 18.04 (4 V100 GPUs inside). We recommend to use the [Dockerfile](./Dockerfile) provided in this repo (with ```-it``` option when running the container).
 
 - See [GET_STARTED.md](./GET_STARTED.md) for how to get started with SBDT models.
 - See [MODEL_ZOO.md](./MODEL_ZOO.md) for available model weights.
+
+## Running evaluation on CPU
+
+Once the detector supports CPU execution, you can run evaluation without NVIDIA GPUs by overriding the Hydra runner settings. The following example evaluates the tennis dataset on CPU:
+
+```bash
+python3 main.py --config-name=eval dataset=tennis runner.device=cpu runner.gpus=[]
+```
+
+You can also select the CPU-specific runner preset with `--config-name=eval runner=eval_cpu`.
 
 ## Citation
 
