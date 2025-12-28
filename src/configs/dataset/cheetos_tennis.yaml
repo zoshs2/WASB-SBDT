@@ -1,0 +1,20 @@
+name: tennis
+ext: '.jpg'
+root_dir: /content/_wasb_work/tennis
+
+video_dirname: video
+frame_dirname: frame
+csv_dirname: csv
+
+csv_filename: 'Label.csv'
+visible_flags: [1,2]
+train:
+  matches: []          # 학습은 안 쓸 거면 비워두기
+  num_clip_ratio: 1.0
+  refine_npz_path:
+
+test:
+  matches: ['my_match1']   # 여기만 내 match 이름으로!
+  num_clip_ratio: 1.0
+  refine_npz_path:
+
